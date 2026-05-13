@@ -26,6 +26,8 @@ CCMeter reads the OAuth credentials that Claude Code stores in the macOS Keychai
 
 The app never performs its own OAuth login flow. It only reads the tokens that Claude Code has already saved, and refreshes them automatically when they expire.
 
+**Privacy:** All data is processed locally on your Mac. Your credentials and usage statistics are never sent to any server other than Anthropic's official API endpoints.
+
 ## Installation
 
 ### Build from source
@@ -33,7 +35,7 @@ The app never performs its own OAuth login flow. It only reads the tokens that C
 Xcode (or the Xcode Command Line Tools with Swift 5.9+) is required.
 
 ```sh
-git clone https://github.com/anthropics/ccmeter.git   # adjust URL as needed
+git clone https://github.com/s-age/ccmeter.git
 cd ccmeter
 ./Scripts/build.sh --install
 ```
