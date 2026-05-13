@@ -1,0 +1,6 @@
+.build/
+.swiftpm/
+DerivedData/
+*.app
+.DS_Store
+.claude/tmp/
