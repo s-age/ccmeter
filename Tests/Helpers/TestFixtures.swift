@@ -4,12 +4,10 @@ import Foundation
 enum TestFixtures {
     static func makeOAuthCredentials(
         accessToken: String = "test-access-token",
-        refreshToken: String = "test-refresh-token",
         expiresAt: Date = Date.now.addingTimeInterval(3600)
     ) -> OAuthCredentials {
         OAuthCredentials(
             accessToken: accessToken,
-            refreshToken: refreshToken,
             expiresAt: expiresAt
         )
     }
@@ -55,18 +53,6 @@ enum TestFixtures {
                 expiresAt: expiresAt,
                 scopes: scopes
             )
-        )
-    }
-
-    static func makeTokenRefreshResponseDTO(
-        accessToken: String = "new-access-token",
-        refreshToken: String = "new-refresh-token",
-        expiresIn: Int = 3600
-    ) -> TokenRefreshResponseDTO {
-        TokenRefreshResponseDTO(
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-            expiresIn: expiresIn
         )
     }
 }

@@ -3,21 +3,15 @@ import Testing
 @testable import CCMeter
 
 private final class MockTokenRepository: TokenRepositoryProtocol, @unchecked Sendable {
-    var loadResult: Result<OAuthCredentials, Error> = .success(TestFixtures.makeOAuthCredentials())
-    var refreshResult: Result<OAuthCredentials, Error> = .success(
-        TestFixtures.makeOAuthCredentials(accessToken: "refreshed-token")
-    )
-    var refreshCallCount = 0
-    var receivedCredentials: OAuthCredentials?
+    var loadResults: [Result<OAuthCredentials, Error>] = [
+        .success(TestFixtures.makeOAuthCredentials())
+    ]
+    var loadCallCount = 0
 
     func load() throws -> OAuthCredentials {
-        try loadResult.get()
-    }
-
-    func refresh(_ credentials: OAuthCredentials) async throws -> OAuthCredentials {
-        refreshCallCount += 1
-        receivedCredentials = credentials
-        return try refreshResult.get()
+        let index = min(loadCallCount, loadResults.count - 1)
+        loadCallCount += 1
+        return try loadResults[index].get()
     }
 }
 
@@ -39,86 +33,76 @@ struct UsageDomainServiceTests {
         UsageDomainService(tokenRepository: mockToken, usageRepository: mockUsage)
     }
 
-    @Test("token not expired fetches usage with existing token")
-    func tokenNotExpired_usesExistingToken() async throws {
-        let creds = TestFixtures.makeOAuthCredentials(
-            accessToken: "valid-token",
-            expiresAt: Date.now.addingTimeInterval(3600)
-        )
-        mockToken.loadResult = .success(creds)
+    @Test("valid token fetches usage immediately")
+    func validToken_fetchesImmediately() async throws {
+        mockToken.loadResults = [
+            .success(TestFixtures.makeOAuthCredentials(
+                accessToken: "valid-token",
+                expiresAt: Date.now.addingTimeInterval(3600)
+            ))
+        ]
 
         _ = try await sut.fetchCurrentUsage()
 
-        #expect(mockToken.refreshCallCount == 0)
+        #expect(mockToken.loadCallCount == 1)
         #expect(mockUsage.receivedAccessToken == "valid-token")
     }
 
-    @Test("expired token triggers refresh before fetch")
-    func tokenExpired_refreshesFirst() async throws {
-        mockToken.loadResult = .success(
-            TestFixtures.makeOAuthCredentials(expiresAt: Date.now.addingTimeInterval(-60))
-        )
-        mockToken.refreshResult = .success(
-            TestFixtures.makeOAuthCredentials(accessToken: "refreshed-token")
-        )
-
-        _ = try await sut.fetchCurrentUsage()
-
-        #expect(mockToken.refreshCallCount == 1)
-        #expect(mockUsage.receivedAccessToken == "refreshed-token")
-    }
-
-    @Test("token expiring within 5-minute buffer triggers refresh")
-    func tokenExpiringWithinBuffer_refreshes() async throws {
-        mockToken.loadResult = .success(
-            TestFixtures.makeOAuthCredentials(expiresAt: Date.now.addingTimeInterval(200))
-        )
-        mockToken.refreshResult = .success(
-            TestFixtures.makeOAuthCredentials(accessToken: "new-token")
-        )
-
-        _ = try await sut.fetchCurrentUsage()
-
-        #expect(mockToken.refreshCallCount == 1)
-        #expect(mockUsage.receivedAccessToken == "new-token")
-    }
-
-    @Test("token expiring beyond buffer does not trigger refresh")
-    func tokenBeyondBuffer_noRefresh() async throws {
-        mockToken.loadResult = .success(
-            TestFixtures.makeOAuthCredentials(
+    @Test("token beyond 5-minute buffer does not retry")
+    func tokenBeyondBuffer_noRetry() async throws {
+        mockToken.loadResults = [
+            .success(TestFixtures.makeOAuthCredentials(
                 accessToken: "still-good",
                 expiresAt: Date.now.addingTimeInterval(400)
-            )
-        )
+            ))
+        ]
 
         _ = try await sut.fetchCurrentUsage()
 
-        #expect(mockToken.refreshCallCount == 0)
+        #expect(mockToken.loadCallCount == 1)
         #expect(mockUsage.receivedAccessToken == "still-good")
     }
 
-    @Test("load error propagates without calling refresh or fetch")
-    func loadError_propagates() async {
-        mockToken.loadResult = .failure(DomainError.tokenNotFound)
+    @Test("expired token retries and succeeds when refreshed")
+    func expiredToken_retriesAndSucceeds() async throws {
+        mockToken.loadResults = [
+            .success(TestFixtures.makeOAuthCredentials(
+                expiresAt: Date.now.addingTimeInterval(-60)
+            )),
+            .success(TestFixtures.makeOAuthCredentials(
+                accessToken: "refreshed-token",
+                expiresAt: Date.now.addingTimeInterval(3600)
+            )),
+        ]
 
-        await #expect(throws: DomainError.self) {
-            _ = try await sut.fetchCurrentUsage()
-        }
-        #expect(mockToken.refreshCallCount == 0)
-        #expect(mockUsage.receivedAccessToken == nil)
+        _ = try await sut.fetchCurrentUsage()
+
+        #expect(mockToken.loadCallCount == 2)
+        #expect(mockUsage.receivedAccessToken == "refreshed-token")
     }
 
-    @Test("refresh error propagates without calling fetch")
-    func refreshError_propagates() async {
-        mockToken.loadResult = .success(
-            TestFixtures.makeOAuthCredentials(expiresAt: Date.now.addingTimeInterval(-60))
-        )
-        mockToken.refreshResult = .failure(DomainError.tokenRefreshFailed("timeout"))
+    @Test("expired token throws after all retries exhausted")
+    func expiredToken_throwsAfterRetries() async {
+        mockToken.loadResults = [
+            .success(TestFixtures.makeOAuthCredentials(
+                expiresAt: Date.now.addingTimeInterval(-60)
+            ))
+        ]
 
         await #expect(throws: DomainError.self) {
             _ = try await sut.fetchCurrentUsage()
         }
+        #expect(mockToken.loadCallCount == 4)
+    }
+
+    @Test("load error propagates without retry")
+    func loadError_propagates() async {
+        mockToken.loadResults = [.failure(DomainError.tokenNotFound)]
+
+        await #expect(throws: DomainError.self) {
+            _ = try await sut.fetchCurrentUsage()
+        }
+        #expect(mockToken.loadCallCount == 1)
         #expect(mockUsage.receivedAccessToken == nil)
     }
 
