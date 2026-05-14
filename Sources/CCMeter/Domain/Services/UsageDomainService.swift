@@ -13,13 +13,21 @@ final class UsageDomainService: UsageDomainServiceProtocol, Sendable {
     }
 
     func fetchCurrentUsage() async throws -> Usage {
-        var credentials = try tokenRepository.load()
         let buffer: TimeInterval = 300
-        if credentials.expiresAt < Date.now.addingTimeInterval(buffer) {
-            credentials = try await tokenRepository.refresh(credentials)
+        let maxRetries = 3
+
+        for attempt in 0...maxRetries {
+            let credentials = try tokenRepository.load()
+            if credentials.expiresAt >= Date.now.addingTimeInterval(buffer) {
+                return try await usageRepository.fetch(
+                    accessToken: credentials.accessToken
+                )
+            }
+            if attempt < maxRetries {
+                try await Task.sleep(for: .seconds(3))
+            }
         }
-        return try await usageRepository.fetch(
-            accessToken: credentials.accessToken
-        )
+
+        throw DomainError.tokenExpired
     }
 }

@@ -4,8 +4,7 @@ final class RepositoryContainer: Sendable {
 
     init(infrastructure: InfrastructureContainer) {
         tokenRepository = TokenRepository(
-            keychainDataSource: infrastructure.keychainDataSource,
-            tokenRefreshDataSource: infrastructure.tokenRefreshDataSource
+            keychainDataSource: infrastructure.keychainDataSource
         )
         usageRepository = UsageRepository(
             apiDataSource: infrastructure.usageAPIDataSource

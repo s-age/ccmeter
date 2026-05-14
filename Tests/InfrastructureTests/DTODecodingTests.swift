@@ -95,23 +95,6 @@ struct DTODecodingTests {
         #expect(dto.currency == "EUR")
     }
 
-    @Test("TokenRefreshResponseDTO decodes snake_case JSON")
-    func tokenRefreshResponseDTO_decodes() throws {
-        let json = """
-        {
-            "access_token": "abc",
-            "refresh_token": "def",
-            "expires_in": 7200
-        }
-        """.data(using: .utf8)!
-
-        let dto = try decoder.decode(TokenRefreshResponseDTO.self, from: json)
-
-        #expect(dto.accessToken == "abc")
-        #expect(dto.refreshToken == "def")
-        #expect(dto.expiresIn == 7200)
-    }
-
     @Test("KeychainCredentialsDTO decodes nested structure")
     func keychainCredentialsDTO_decodesNested() throws {
         let json = """
