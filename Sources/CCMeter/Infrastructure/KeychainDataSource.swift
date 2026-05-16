@@ -1,29 +1,36 @@
 import Foundation
-import Security
 
 final class KeychainDataSource: KeychainDataSourceProtocol, Sendable {
     private static let serviceName = "Claude Code-credentials"
 
     func read() throws -> KeychainCredentialsDTO {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.serviceName,
-            kSecAttrAccount as String: NSUserName(),
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
+        let username = ProcessInfo.processInfo.environment["USER"] ?? NSUserName()
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/security")
+        process.arguments = [
+            "find-generic-password",
+            "-a", username,
+            "-s", Self.serviceName,
+            "-w"
         ]
 
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        let stdout = Pipe()
+        process.standardOutput = stdout
+        process.standardError = Pipe()
 
-        guard status == errSecSuccess, let data = result as? Data else {
+        do {
+            try process.run()
+        } catch {
+            throw DomainError.tokenNotFound
+        }
+        process.waitUntilExit()
+
+        guard process.terminationStatus == 0 else {
             throw DomainError.tokenNotFound
         }
 
-        return try JSONDecoder().decode(
-            KeychainCredentialsDTO.self,
-            from: data
-        )
+        let output = stdout.fileHandleForReading.readDataToEndOfFile()
+        return try JSONDecoder().decode(KeychainCredentialsDTO.self, from: output)
     }
-
 }
