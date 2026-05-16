@@ -32,11 +32,9 @@ The 5-Hour Session row is only shown on Max plan. The Anthropic API does not ret
 
 ## Keychain Access
 
-CCMeter reads the OAuth credentials that Claude Code stores in the macOS Keychain (service: `Claude Code-credentials`). On first launch, macOS will prompt you to allow Keychain access -- this is required for the app to authenticate with the Anthropic API and fetch your usage data.
+CCMeter reads the OAuth credentials that Claude Code stores in the macOS Keychain (service: `Claude Code-credentials`). No password prompt is required -- the app reads credentials via the same `security` CLI that Claude Code itself uses, which macOS always permits without confirmation.
 
 The app never performs its own OAuth login flow and never modifies Keychain entries. It only reads the token that Claude Code has already saved.
-
-**Periodic re-authorization:** macOS may show the Keychain access prompt again approximately once a day. This happens because Claude Code periodically refreshes its OAuth token, which recreates the Keychain item and resets the access permission for other apps. This is expected macOS security behavior, not a bug.
 
 **Privacy:** All data is processed locally on your Mac. Your credentials and usage statistics are never sent to any server other than Anthropic's official API endpoints.
 
