@@ -20,11 +20,23 @@ A macOS menu bar app that displays your [Claude Code](https://docs.anthropic.com
 - macOS 14.0 (Sonoma) or later
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed and signed in
 
+## Plan compatibility
+
+| Feature | Pro | Max |
+|---|---|---|
+| 7-Day Weekly usage | ✓ | ✓ |
+| 7-Day Sonnet usage | ✓ | ✓ |
+| 5-Hour Session usage | — | ✓ |
+
+The 5-Hour Session row is only shown on Max plan. The Anthropic API does not return 5-hour session data for Pro plan subscribers, so that section is hidden automatically.
+
 ## Keychain Access
 
 CCMeter reads the OAuth credentials that Claude Code stores in the macOS Keychain (service: `Claude Code-credentials`). On first launch, macOS will prompt you to allow Keychain access -- this is required for the app to authenticate with the Anthropic API and fetch your usage data.
 
-The app never performs its own OAuth login flow. It only reads the tokens that Claude Code has already saved, and refreshes them automatically when they expire.
+The app never performs its own OAuth login flow and never modifies Keychain entries. It only reads the token that Claude Code has already saved.
+
+**Periodic re-authorization:** macOS may show the Keychain access prompt again approximately once a day. This happens because Claude Code periodically refreshes its OAuth token, which recreates the Keychain item and resets the access permission for other apps. This is expected macOS security behavior, not a bug.
 
 **Privacy:** All data is processed locally on your Mac. Your credentials and usage statistics are never sent to any server other than Anthropic's official API endpoints.
 
