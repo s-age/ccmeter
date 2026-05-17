@@ -7,7 +7,7 @@ struct MenuBarLabel: View {
         if let usage = viewModel.usage {
             Image(nsImage: renderLabel(usage))
         } else if viewModel.errorMessage != nil {
-            Text("ccm: !")
+            Text("ccm ⚠️")
         } else {
             Text("ccm: --")
         }

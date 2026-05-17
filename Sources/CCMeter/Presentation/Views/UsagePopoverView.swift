@@ -8,9 +8,7 @@ struct UsagePopoverView: View {
             Text("Claude Code Usage")
                 .font(.system(size: 14, weight: .semibold))
 
-            if let error = viewModel.errorMessage,
-               viewModel.usage == nil
-            {
+            if let error = viewModel.errorMessage {
                 errorView(error)
             }
 
@@ -109,18 +107,33 @@ struct UsagePopoverView: View {
     }
 
     private func errorView(_ message: String) -> some View {
-        HStack {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.red)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                Text("API request failed")
+                    .font(.system(size: 12, weight: .medium))
+            }
             Text(message)
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if let lastUpdated = viewModel.lastUpdated {
+                Text(
+                    "Last successful update: \(lastUpdated.formatted(date: .omitted, time: .shortened))"
+                )
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
+            }
         }
+        .padding(8)
+        .background(Color.orange.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 
     private var footerView: some View {
         HStack {
-            if let lastUpdated = viewModel.lastUpdated {
+            if viewModel.errorMessage == nil, let lastUpdated = viewModel.lastUpdated {
                 Text(
                     "Updated \(lastUpdated.formatted(date: .omitted, time: .shortened))"
                 )

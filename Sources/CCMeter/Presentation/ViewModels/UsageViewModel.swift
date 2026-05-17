@@ -47,6 +47,7 @@ final class UsageViewModel {
             errorMessage = nil
             lastUpdated = .now
         } catch {
+            usage = nil
             errorMessage = error.localizedDescription
         }
     }
