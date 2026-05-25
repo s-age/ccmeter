@@ -38,9 +38,15 @@ The app never performs its own OAuth login flow and never modifies Keychain entr
 
 **Privacy:** All data is processed locally on your Mac. Your credentials and usage statistics are never sent to any server other than Anthropic's official API endpoints.
 
+If you'd like to verify what the app does with your credentials, the relevant code is small and easy to follow:
+
+- **[`Sources/CCMeter/Infrastructure/KeychainDataSource.swift`](Sources/CCMeter/Infrastructure/KeychainDataSource.swift)** — runs `security find-generic-password -s "Claude Code-credentials"` and parses the JSON output
+- **[`Sources/CCMeter/Repositories/TokenRepository.swift`](Sources/CCMeter/Repositories/TokenRepository.swift)** — extracts the `accessToken` and `expiresAt` fields from the raw credential
+- **[`Sources/CCMeter/Domain/Services/UsageDomainService.swift`](Sources/CCMeter/Domain/Services/UsageDomainService.swift)** — passes the access token to Anthropic's usage API and returns the result; the token is not stored or logged
+
 ## Installation
 
-### Build from source
+### Build from source (recommended)
 
 Xcode (or the Xcode Command Line Tools with Swift 5.9+) is required.
 
@@ -61,6 +67,13 @@ This builds a release binary, assembles `CCMeter.app`, code-signs it, and copies
 | `--install` | Install to `/Applications` after building |
 | `--skip-icon` | Skip app icon generation |
 | `--no-sign` | Skip code signing |
+
+### Homebrew
+
+```sh
+brew tap s-age/ccmeter
+brew install --cask ccmeter
+```
 
 ## License
 
