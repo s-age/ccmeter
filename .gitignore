@@ -3,4 +3,5 @@
 DerivedData/
 *.app
 .DS_Store
+*.dmg
 .claude/tmp/
