@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MenuBarLabel: View {
     let viewModel: UsageViewModel
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         if let usage = viewModel.usage {
@@ -18,6 +19,7 @@ struct MenuBarLabel: View {
     ) -> NSImage {
         let fiveHour = usage.fiveHour?.utilization ?? 0
         let sevenDay = usage.sevenDay?.utilization ?? 0
+        let textColor = viewModel.labelColor.resolved(for: colorScheme)
 
         let content = HStack(spacing: 3) {
             DonutChartView(
@@ -27,10 +29,10 @@ struct MenuBarLabel: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text("\(fiveHour)%")
                     .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(textColor)
                 Text("\(sevenDay)%")
                     .font(.system(size: 9))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(textColor)
             }
         }
 
