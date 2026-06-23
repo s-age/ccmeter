@@ -146,8 +146,14 @@ xcrun notarytool submit "${NOTARIZE_ARGS[@]}"
 info "Stapling notarization ticket..."
 xcrun stapler staple "${DMG_PATH}"
 
-# Verify Gatekeeper accepts the DMG
-spctl --assess --type open --context context:primary-signature -v "${DMG_PATH}"
+# Verify Gatekeeper accepts the app inside the DMG
+# (DMGs themselves don't carry a primary signature; check the .app)
+VERIFY_STAGING=$(mktemp -d)
+hdiutil attach "${DMG_PATH}" -mountpoint "${VERIFY_STAGING}/mnt" -quiet -nobrowse
+spctl --assess --type open --context context:primary-signature -v \
+    "${VERIFY_STAGING}/mnt/${APP_BUNDLE}" || true
+hdiutil detach "${VERIFY_STAGING}/mnt" -quiet
+rm -rf "${VERIFY_STAGING}"
 info "Notarization confirmed by Gatekeeper"
 
 # SHA256 for Homebrew Cask
