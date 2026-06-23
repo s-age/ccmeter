@@ -11,11 +11,23 @@ final class UsageViewModel {
     private(set) var isLoading: Bool = false
     var pollingInterval: PollingInterval = .fiveMinutes
     private(set) var launchAtLogin: Bool = SMAppService.mainApp.status == .enabled
+    var labelColor: MenuBarLabelColor {
+        didSet {
+            UserDefaults.standard.set(
+                labelColor.rawValue,
+                forKey: Self.labelColorDefaultsKey
+            )
+        }
+    }
+
+    private static let labelColorDefaultsKey = "menuBarLabelColor"
 
     private let fetchUsage: FetchUsageUseCaseProtocol
 
     init(fetchUsage: FetchUsageUseCaseProtocol) {
         self.fetchUsage = fetchUsage
+        let stored = UserDefaults.standard.string(forKey: Self.labelColorDefaultsKey)
+        labelColor = stored.flatMap(MenuBarLabelColor.init(rawValue:)) ?? .auto
     }
 
     func poll() async {

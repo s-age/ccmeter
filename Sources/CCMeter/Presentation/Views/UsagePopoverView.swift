@@ -18,6 +18,7 @@ struct UsagePopoverView: View {
 
             Divider()
             intervalPicker
+            labelColorPicker
             launchAtLoginToggle
             Divider()
             footerView
@@ -80,6 +81,22 @@ struct UsagePopoverView: View {
             Picker("", selection: $viewModel.pollingInterval) {
                 ForEach(PollingInterval.allCases, id: \.self) { interval in
                     Text(interval.displayLabel).tag(interval)
+                }
+            }
+            .labelsHidden()
+            .fixedSize()
+        }
+    }
+
+    private var labelColorPicker: some View {
+        HStack {
+            Text("Menu Bar Color")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            Spacer()
+            Picker("", selection: $viewModel.labelColor) {
+                ForEach(MenuBarLabelColor.allCases, id: \.self) { color in
+                    Text(color.displayLabel).tag(color)
                 }
             }
             .labelsHidden()
