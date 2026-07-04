@@ -39,8 +39,14 @@ struct UsagePopoverView: View {
             UsageRowView(title: "7-Day Weekly", info: sevenDay)
         }
 
-        if let sonnet = usage.sevenDaySonnet {
-            UsageRowView(title: "7-Day Sonnet", info: sonnet)
+        if let model = usage.sevenDayModel {
+            UsageRowView(
+                title: "7-Day \(model.modelName)",
+                info: FetchUsageResponse.RateLimitInfo(
+                    utilization: model.utilization,
+                    resetsAt: model.resetsAt
+                )
+            )
         }
 
         if let extra = usage.extraUsage, extra.isEnabled {

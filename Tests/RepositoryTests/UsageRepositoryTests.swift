@@ -34,11 +34,34 @@ struct UsageRepositoryTests {
 
         #expect(usage.fiveHour?.utilization == 25.0)
         #expect(usage.sevenDay?.utilization == 50.0)
-        #expect(usage.sevenDaySonnet?.utilization == 10.0)
+        #expect(usage.sevenDayModel?.modelName == "Sonnet")
+        #expect(usage.sevenDayModel?.rateLimit.utilization == 10.0)
         #expect(usage.extraUsage?.isEnabled == true)
         #expect(usage.extraUsage?.monthlyLimit == 100)
         #expect(usage.extraUsage?.usedCredits == 42.5)
         #expect(usage.extraUsage?.currency == "USD")
+    }
+
+    @Test("fetch prefers weekly_scoped limits entry over legacy seven_day_sonnet field")
+    func fetch_prefersLimitsArray_overLegacySonnetField() async throws {
+        let dto = UsageResponseDTO(
+            sevenDaySonnet: RateLimitDTO(utilization: 10.0, resetsAt: "2025-01-03T00:00:00.000Z"),
+            limits: [
+                LimitDTO(
+                    kind: "weekly_scoped",
+                    percent: 1,
+                    resetsAt: "2025-01-04T00:00:00.000Z",
+                    scope: LimitScopeDTO(model: LimitModelScopeDTO(displayName: "Fable")),
+                    isActive: false
+                )
+            ]
+        )
+        mockDataSource.result = .success(dto)
+
+        let usage = try await sut.fetch(accessToken: "token")
+
+        #expect(usage.sevenDayModel?.modelName == "Fable")
+        #expect(usage.sevenDayModel?.rateLimit.utilization == 1.0)
     }
 
     @Test("fetch with all nil DTO fields returns Usage with all nils")
@@ -51,7 +74,7 @@ struct UsageRepositoryTests {
 
         #expect(usage.fiveHour == nil)
         #expect(usage.sevenDay == nil)
-        #expect(usage.sevenDaySonnet == nil)
+        #expect(usage.sevenDayModel == nil)
         #expect(usage.extraUsage == nil)
     }
 
