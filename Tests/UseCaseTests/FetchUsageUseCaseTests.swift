@@ -20,7 +20,7 @@ struct FetchUsageUseCaseTests {
         let usage = Usage(
             fiveHour: RateLimit(utilization: 75.6, resetsAt: Date.now),
             sevenDay: RateLimit(utilization: 30.0, resetsAt: Date.now),
-            sevenDaySonnet: nil,
+            sevenDayModel: nil,
             extraUsage: nil
         )
         mockService.result = .success(usage)
@@ -29,21 +29,41 @@ struct FetchUsageUseCaseTests {
 
         #expect(response.fiveHour?.utilization == 75)
         #expect(response.sevenDay?.utilization == 30)
-        #expect(response.sevenDaySonnet == nil)
+        #expect(response.sevenDayModel == nil)
         #expect(response.extraUsage == nil)
+    }
+
+    @Test("execute maps dynamic model rate limit")
+    func execute_mapsModelRateLimit() async throws {
+        let resetsAt = Date.now
+        mockService.result = .success(
+            Usage(
+                fiveHour: nil, sevenDay: nil,
+                sevenDayModel: ModelRateLimit(
+                    modelName: "Fable",
+                    rateLimit: RateLimit(utilization: 1.0, resetsAt: resetsAt)
+                ),
+                extraUsage: nil
+            )
+        )
+
+        let response = try await sut.execute(FetchUsageRequest())
+
+        #expect(response.sevenDayModel?.modelName == "Fable")
+        #expect(response.sevenDayModel?.utilization == 1)
     }
 
     @Test("execute with all nil Usage returns all nil response")
     func execute_allNil() async throws {
         mockService.result = .success(
-            Usage(fiveHour: nil, sevenDay: nil, sevenDaySonnet: nil, extraUsage: nil)
+            Usage(fiveHour: nil, sevenDay: nil, sevenDayModel: nil, extraUsage: nil)
         )
 
         let response = try await sut.execute(FetchUsageRequest())
 
         #expect(response.fiveHour == nil)
         #expect(response.sevenDay == nil)
-        #expect(response.sevenDaySonnet == nil)
+        #expect(response.sevenDayModel == nil)
         #expect(response.extraUsage == nil)
     }
 
@@ -51,7 +71,7 @@ struct FetchUsageUseCaseTests {
     func execute_mapsExtraUsage() async throws {
         mockService.result = .success(
             Usage(
-                fiveHour: nil, sevenDay: nil, sevenDaySonnet: nil,
+                fiveHour: nil, sevenDay: nil, sevenDayModel: nil,
                 extraUsage: ExtraUsageInfo(
                     isEnabled: true, monthlyLimit: 100,
                     usedCredits: 42.5, utilization: 0.425, currency: "USD"

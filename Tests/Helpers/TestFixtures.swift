@@ -15,13 +15,13 @@ enum TestFixtures {
     static func makeUsage(
         fiveHour: RateLimit? = RateLimit(utilization: 25.0, resetsAt: Date.now.addingTimeInterval(3600)),
         sevenDay: RateLimit? = RateLimit(utilization: 50.0, resetsAt: Date.now.addingTimeInterval(86400)),
-        sevenDaySonnet: RateLimit? = nil,
+        sevenDayModel: ModelRateLimit? = nil,
         extraUsage: ExtraUsageInfo? = nil
     ) -> Usage {
         Usage(
             fiveHour: fiveHour,
             sevenDay: sevenDay,
-            sevenDaySonnet: sevenDaySonnet,
+            sevenDayModel: sevenDayModel,
             extraUsage: extraUsage
         )
     }
@@ -30,13 +30,15 @@ enum TestFixtures {
         fiveHour: RateLimitDTO? = RateLimitDTO(utilization: 25.0, resetsAt: "2025-01-01T00:00:00.000Z"),
         sevenDay: RateLimitDTO? = RateLimitDTO(utilization: 50.0, resetsAt: "2025-01-02T00:00:00.000Z"),
         sevenDaySonnet: RateLimitDTO? = nil,
-        extraUsage: ExtraUsageDTO? = nil
+        extraUsage: ExtraUsageDTO? = nil,
+        limits: [LimitDTO]? = nil
     ) -> UsageResponseDTO {
         UsageResponseDTO(
             fiveHour: fiveHour,
             sevenDay: sevenDay,
             sevenDaySonnet: sevenDaySonnet,
-            extraUsage: extraUsage
+            extraUsage: extraUsage,
+            limits: limits
         )
     }
 

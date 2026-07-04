@@ -3,13 +3,18 @@ import Foundation
 struct Usage: Equatable, Sendable {
     let fiveHour: RateLimit?
     let sevenDay: RateLimit?
-    let sevenDaySonnet: RateLimit?
+    let sevenDayModel: ModelRateLimit?
     let extraUsage: ExtraUsageInfo?
 }
 
 struct RateLimit: Equatable, Sendable {
     let utilization: Double
     let resetsAt: Date
+}
+
+struct ModelRateLimit: Equatable, Sendable {
+    let modelName: String
+    let rateLimit: RateLimit
 }
 
 struct ExtraUsageInfo: Equatable, Sendable {
